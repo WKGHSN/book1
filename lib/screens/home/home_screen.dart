@@ -18,13 +18,16 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _currentIndex = 0;
   final TextEditingController _searchController = TextEditingController();
   List<Book> _allBooks = [];
   List<Book> _filteredBooks = [];
   User? _currentUser;
-  String? _selectedGenre; // null означає "Всі"
+  String? _selectedGenre;
+  
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
 
   final List<String> _genres = [
     'Всі',
@@ -39,7 +42,16 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeIn,
+    );
     _loadData();
+    _fadeController.forward();
   }
 
   void _loadData() {
@@ -85,19 +97,25 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
 
   Widget _buildLibraryScreen() {
     final backgroundProvider = Provider.of<BackgroundProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
     
     return Container(
       decoration: BoxDecoration(
-        gradient: backgroundProvider.currentBackground.gradient,
+        gradient: isDark 
+            ? backgroundProvider.currentBackground.darkGradient
+            : backgroundProvider.currentBackground.gradient,
       ),
       child: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
         slivers: [
-          // Компактний AppBar БЕЗ перемикача теми
+          // AppBar з перемикачем теми
           SliverAppBar(
             floating: true,
             snap: true,
@@ -109,40 +127,82 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            actions: [
+              // Перемикач теми (🌙/☀️)
+              IconButton(
+                icon: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: Icon(
+                    isDark ? Icons.light_mode : Icons.dark_mode,
+                    key: ValueKey(isDark),
+                  ),
+                ),
+                onPressed: () {
+                  themeProvider.toggleTheme();
+                },
+                tooltip: isDark ? 'Світла тема' : 'Темна тема',
+              ),
+            ],
           ),
 
-          // Компактний фільтр категорій (чіпси)
+          // Фільтр категорій з анімацією
           SliverToBoxAdapter(
             child: Container(
-              height: 50,
-              margin: const EdgeInsets.only(top: 8),
+              height: 56,
+              margin: const EdgeInsets.only(top: 8, bottom: 4),
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
+                physics: const BouncingScrollPhysics(),
                 itemCount: _genres.length,
                 itemBuilder: (context, index) {
                   final genre = _genres[index];
                   final isSelected = _selectedGenre == genre || 
                       (_selectedGenre == null && genre == 'Всі');
                   
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: FilterChip(
-                      label: Text(genre),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        _selectGenre(genre);
-                      },
-                      backgroundColor: Colors.white.withValues(alpha: 0.8),
-                      selectedColor: AppColors.goldenAccent,
-                      checkmarkColor: AppColors.darkBrownText,
-                      labelStyle: TextStyle(
-                        color: isSelected 
-                            ? AppColors.darkBrownText 
-                            : AppColors.softBrown,
-                        fontWeight: isSelected 
-                            ? FontWeight.bold 
-                            : FontWeight.normal,
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => _selectGenre(genre),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected 
+                                ? AppColors.goldenAccent
+                                : (isDark 
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : Colors.white.withValues(alpha: 0.8)),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: isSelected ? [
+                              BoxShadow(
+                                color: AppColors.goldenAccent.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ] : [],
+                          ),
+                          child: Text(
+                            genre,
+                            style: TextStyle(
+                              color: isSelected 
+                                  ? AppColors.darkBrownText 
+                                  : (isDark 
+                                      ? Colors.white 
+                                      : AppColors.softBrown),
+                              fontWeight: isSelected 
+                                  ? FontWeight.bold 
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   );
@@ -151,19 +211,26 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // Пошук (знижений)
+          // Пошук
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
               child: TextField(
                 controller: _searchController,
                 onChanged: _filterBooks,
+                style: Theme.of(context).textTheme.bodyMedium,
                 decoration: InputDecoration(
                   hintText: 'Пошук книг або авторів...',
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: isDark ? Colors.white70 : AppColors.softBrown,
+                  ),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear),
+                          icon: Icon(
+                            Icons.clear,
+                            color: isDark ? Colors.white70 : AppColors.softBrown,
+                          ),
                           onPressed: () {
                             _searchController.clear();
                             _filterBooks('');
@@ -171,13 +238,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         )
                       : null,
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.9),
+                  fillColor: isDark 
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.white.withValues(alpha: 0.9),
                 ),
               ),
             ),
           ),
 
-          // Результати пошуку або жанрові категорії (карусель)
+          // Результати або категорії
           if (_searchController.text.isNotEmpty || _selectedGenre != null && _selectedGenre != 'Всі')
             SliverPadding(
               padding: const EdgeInsets.all(16.0),
@@ -190,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Icon(
                               Icons.search_off,
                               size: 64,
-                              color: Colors.grey[400],
+                              color: isDark ? Colors.white30 : Colors.grey[400],
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -210,18 +279,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
-                          return BookCard(
-                            book: _filteredBooks[index],
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => BookDetailScreen(
-                                    book: _filteredBooks[index],
+                          return FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: BookCard(
+                              book: _filteredBooks[index],
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => BookDetailScreen(
+                                      book: _filteredBooks[index],
+                                    ),
                                   ),
-                                ),
-                              ).then((_) => _loadData());
-                            },
+                                ).then((_) => _loadData());
+                              },
+                            ),
                           );
                         },
                         childCount: _filteredBooks.length,
@@ -229,28 +301,31 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
             )
           else
-            // Жанрові секції (горизонтальна карусель)
+            // Жанрові секції
             SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final genre = _genres[index + 1]; // Пропускаємо "Всі"
+                  final genre = _genres[index + 1];
                   final books = _getBooksByGenre(genre);
                   if (books.isEmpty) return const SizedBox.shrink();
                   
-                  return GenreSection(
-                    genre: genre,
-                    books: books,
-                    onBookTap: (book) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => BookDetailScreen(book: book),
-                        ),
-                      ).then((_) => _loadData());
-                    },
+                  return FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: GenreSection(
+                      genre: genre,
+                      books: books,
+                      onBookTap: (book) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BookDetailScreen(book: book),
+                          ),
+                        ).then((_) => _loadData());
+                      },
+                    ),
                   );
                 },
-                childCount: _genres.length - 1, // Без "Всі"
+                childCount: _genres.length - 1,
               ),
             ),
         ],
@@ -261,18 +336,24 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final backgroundProvider = Provider.of<BackgroundProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
     
     final screens = [
       _buildLibraryScreen(),
       Container(
         decoration: BoxDecoration(
-          gradient: backgroundProvider.currentBackground.gradient,
+          gradient: isDark
+              ? backgroundProvider.currentBackground.darkGradient
+              : backgroundProvider.currentBackground.gradient,
         ),
         child: const FavoritesScreen(),
       ),
       Container(
         decoration: BoxDecoration(
-          gradient: backgroundProvider.currentBackground.gradient,
+          gradient: isDark
+              ? backgroundProvider.currentBackground.darkGradient
+              : backgroundProvider.currentBackground.gradient,
         ),
         child: const ProfileScreen(),
       ),
@@ -290,9 +371,12 @@ class _HomeScreenState extends State<HomeScreen> {
             _searchController.clear();
             _filterBooks('');
           } else {
-            _loadData(); // Оновлюємо дані при поверненні на головну
+            _loadData();
           }
         },
+        backgroundColor: isDark 
+            ? const Color(0xFF1E293B).withValues(alpha: 0.95)
+            : Colors.white.withValues(alpha: 0.95),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),

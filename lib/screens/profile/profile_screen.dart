@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../models/user.dart';
 import '../../models/book.dart';
 import '../../services/hive_service.dart';
-import '../../services/background_service.dart';
 import '../auth/login_screen.dart';
 import '../../constants/app_colors.dart';
-import '../../main.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -168,91 +165,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showBackgroundSelector() {
-    final backgroundProvider = Provider.of<BackgroundProvider>(context, listen: false);
-    
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Виберіть фон',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 120,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: BackgroundService.backgrounds.length,
-                itemBuilder: (context, index) {
-                  final bg = BackgroundService.backgrounds[index];
-                  final isSelected = backgroundProvider.currentBackgroundId == bg.id;
-                  
-                  return GestureDetector(
-                    onTap: () {
-                      backgroundProvider.setBackground(bg.id);
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      width: 100,
-                      margin: const EdgeInsets.only(right: 12),
-                      decoration: BoxDecoration(
-                        gradient: bg.gradient,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected 
-                              ? AppColors.goldenAccent 
-                              : Colors.transparent,
-                          width: 3,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (isSelected)
-                            const Icon(
-                              Icons.check_circle,
-                              color: AppColors.goldenAccent,
-                              size: 32,
-                            ),
-                          const SizedBox(height: 8),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              bg.name,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_currentUser == null) {
       return const Center(child: CircularProgressIndicator());
     }
-
-    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return CustomScrollView(
       slivers: [
@@ -340,47 +257,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Налаштування
-                Text(
-                  'Налаштування',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 12),
-                Card(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  child: Column(
-                    children: [
-                      // Перемикач теми (перенесений з головної)
-                      SwitchListTile(
-                        title: const Text('Темна тема'),
-                        subtitle: const Text('Комфортне читання вночі'),
-                        value: themeProvider.isDarkMode,
-                        onChanged: (value) {
-                          themeProvider.setTheme(value);
-                        },
-                        secondary: Icon(
-                          themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      // Вибір фону
-                      ListTile(
-                        leading: const Icon(Icons.palette),
-                        title: const Text('Фон застосунку'),
-                        subtitle: Consumer<BackgroundProvider>(
-                          builder: (context, bgProvider, _) {
-                            return Text(bgProvider.currentBackground.name);
-                          },
-                        ),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: _showBackgroundSelector,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Дії
+                // Дії (БЕЗ розділу "Налаштування")
                 Text(
                   'Дії',
                   style: Theme.of(context).textTheme.titleLarge,

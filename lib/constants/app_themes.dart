@@ -7,7 +7,7 @@ class AppThemes {
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    scaffoldBackgroundColor: AppColors.creamBackground,
+    scaffoldBackgroundColor: Colors.transparent, // Прозорий для градієнтів
     colorScheme: const ColorScheme.light(
       primary: AppColors.goldenAccent,
       secondary: AppColors.lightGold,
@@ -98,7 +98,7 @@ class AppThemes {
     
     // AppBar
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.creamBackground,
+      backgroundColor: Colors.transparent,
       foregroundColor: AppColors.darkBrownText,
       elevation: 0,
       titleTextStyle: GoogleFonts.nunito(
@@ -138,19 +138,19 @@ class AppThemes {
     ),
   );
 
-  // Темна тема
+  // Темна тема з правильними кольорами
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
-    scaffoldBackgroundColor: AppColors.darkBackground,
+    scaffoldBackgroundColor: Colors.transparent, // Прозорий для градієнтів
     colorScheme: const ColorScheme.dark(
       primary: AppColors.goldenAccent,
       secondary: AppColors.lightGold,
-      surface: AppColors.darkSurface,
+      surface: Color(0xFF1E293B), // Темна поверхня
       error: AppColors.error,
-      onPrimary: AppColors.darkBackground,
-      onSecondary: AppColors.darkBackground,
-      onSurface: AppColors.darkText,
+      onPrimary: AppColors.darkBrownText,
+      onSecondary: AppColors.darkBrownText,
+      onSurface: Color(0xFFF8FAFC), // Світлий текст
       onError: AppColors.white,
     ),
     
@@ -158,74 +158,112 @@ class AppThemes {
       displayLarge: GoogleFonts.merriweather(
         fontSize: 32,
         fontWeight: FontWeight.bold,
-        color: AppColors.darkText,
+        color: const Color(0xFFF8FAFC), // Світлий текст
       ),
       displayMedium: GoogleFonts.merriweather(
         fontSize: 28,
         fontWeight: FontWeight.bold,
-        color: AppColors.darkText,
+        color: const Color(0xFFF8FAFC),
       ),
       displaySmall: GoogleFonts.merriweather(
         fontSize: 24,
         fontWeight: FontWeight.w600,
-        color: AppColors.darkText,
+        color: const Color(0xFFF8FAFC),
       ),
       headlineMedium: GoogleFonts.merriweather(
         fontSize: 20,
         fontWeight: FontWeight.w600,
-        color: AppColors.darkText,
+        color: const Color(0xFFF8FAFC),
       ),
       headlineSmall: GoogleFonts.merriweather(
         fontSize: 18,
         fontWeight: FontWeight.w500,
-        color: AppColors.darkText,
+        color: const Color(0xFFF8FAFC),
       ),
       titleLarge: GoogleFonts.nunito(
         fontSize: 20,
         fontWeight: FontWeight.bold,
-        color: AppColors.darkText,
+        color: const Color(0xFFF8FAFC),
       ),
       titleMedium: GoogleFonts.nunito(
         fontSize: 16,
         fontWeight: FontWeight.w600,
-        color: AppColors.darkText,
+        color: const Color(0xFFF8FAFC),
       ),
       titleSmall: GoogleFonts.nunito(
         fontSize: 14,
         fontWeight: FontWeight.w500,
-        color: AppColors.darkText,
+        color: const Color(0xFFF8FAFC),
       ),
       bodyLarge: GoogleFonts.merriweather(
         fontSize: 16,
-        color: AppColors.darkText,
+        color: const Color(0xFFF8FAFC),
       ),
       bodyMedium: GoogleFonts.merriweather(
         fontSize: 14,
-        color: AppColors.darkText,
+        color: const Color(0xFFF8FAFC),
       ),
       bodySmall: GoogleFonts.nunito(
         fontSize: 12,
-        color: AppColors.lightGold,
+        color: const Color(0xFFCBD5E1),
+      ),
+    ),
+    
+    // Кнопки залишаються помітними
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.goldenAccent,
+        foregroundColor: AppColors.darkBrownText,
+        textStyle: GoogleFonts.nunito(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     ),
     
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.darkBackground,
-      foregroundColor: AppColors.darkText,
+      backgroundColor: Colors.transparent,
+      foregroundColor: const Color(0xFFF8FAFC),
       elevation: 0,
       titleTextStyle: GoogleFonts.nunito(
         fontSize: 20,
         fontWeight: FontWeight.bold,
-        color: AppColors.darkText,
+        color: const Color(0xFFF8FAFC),
+      ),
+      iconTheme: const IconThemeData(
+        color: Color(0xFFF8FAFC),
       ),
     ),
     
     cardTheme: CardThemeData(
-      color: AppColors.darkSurface,
+      color: const Color(0xFF1E293B),
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
+    ),
+    
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: const Color(0xFF1E293B),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF334155)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF334155)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.goldenAccent, width: 2),
+      ),
+      labelStyle: GoogleFonts.nunito(color: const Color(0xFFCBD5E1)),
+      hintStyle: GoogleFonts.nunito(color: const Color(0xFF94A3B8)),
     ),
   );
 }
